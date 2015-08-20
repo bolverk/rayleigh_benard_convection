@@ -22,7 +22,8 @@ def plot_single(in_file, zfunc, zname, out_file):
             lowbound = int(vert_idx_list[i])
             upbound = int(vert_idx_list[i+1])
             verts.append([[x,y] for x,y
-                          in zip(x_verts, y_verts)])
+                          in zip(x_verts[lowbound:upbound], 
+                                 y_verts[lowbound:upbound])])
         coll = PolyCollection(verts, 
                               array=zfunc(f),
                               cmap = mpl.cm.jet,
@@ -38,125 +39,55 @@ def plot_single(in_file, zfunc, zname, out_file):
             plt.show()
         else:
             plt.savefig(out_file)
+        plt.clf()
+        plt.cla()
+        plt.close()
 
 def plot_all(zfunc, zname):
 
+    jl_flag = True
+
     import glob
     import numpy
-    import joblib
+    if jl_flag:
+        import joblib
 
     flist = glob.glob('snapshot_*.h5')
 
-    joblib.Parallel(n_jobs=8)(joblib.delayed(plot_single)
-                              (fname,
-                               zfunc,
-                               zname,
-                               fname.replace('snapshot',zname).replace('.h5','.png')) for fname in flist)
-    #[plot_single(fname,zfunc,zname,
-    #             fname.replace('snapshot',zname).replace('.h5','.png'))
-    # for fname in flist]
+    if jl_flag:
+        joblib.Parallel(n_jobs=8)(joblib.delayed(plot_single)
+                                  (fname,
+                                   zfunc,
+                                   zname,
+                                   fname.replace('snapshot',zname).replace('.h5','.png')) for fname in flist)
+    else:
+        [plot_single(fname,zfunc,zname,
+                     fname.replace('snapshot',zname).replace('.h5','.png'))
+         for fname in flist]
 
-def log10_density_cgs(f):
-
-    import numpy
-
-    return numpy.log10(numpy.array(f['density']))[numpy.array(f['ghost'])<0.5]
-
-def log10_temperature(f):
+def log10_density(f):
 
     import numpy
 
-    return numpy.log10(f['temperature'])[numpy.array(f['ghost'])<0.5]
+    return numpy.log10(numpy.array(f['density']))
+
+def log10_pressure(f):
+
+    import numpy
+
+    return numpy.log10(f['pressure'])
 
 def x_velocity(f):
 
     import numpy
 
-    return numpy.array(f['x_velocity'])[numpy.array(f['ghost'])<0.5]
+    return numpy.array(f['x_velocity'])
 
 def y_velocity(f):
 
     import numpy
 
-    return numpy.array(f['y_velocity'])[numpy.array(f['ghost'])<0.5]
-
-def He4_prof(f):
-
-    import numpy
-
-    return numpy.array(f['He4'])[numpy.array(f['ghost'])<0.5]
-
-def C12_prof(f):
-
-    import numpy
-
-    return numpy.array(f['C12'])[numpy.array(f['ghost'])<0.5]
-
-def O16_prof(f):
-
-    import numpy
-
-    return numpy.array(f['O16'])[numpy.array(f['ghost'])<0.5]
-
-def Ne20_prof(f):
-
-    import numpy
-
-    return numpy.array(f['Ne20'])[numpy.array(f['ghost'])<0.5]
-
-def Mg24_prof(f):
-
-    import numpy
-
-    return numpy.array(f['Mg24'])[numpy.array(f['ghost'])<0.5]
-
-def Si28_prof(f):
-
-    import numpy
-
-    return numpy.array(f['Si28'])[numpy.array(f['ghost'])<0.5]
-
-def S32_prof(f):
-
-    import numpy
-
-    return numpy.array(f['S32'])[numpy.array(f['ghost'])<0.5]
-
-def Ar36_prof(f):
-
-    import numpy
-
-    return numpy.array(f['Ar36'])[numpy.array(f['ghost'])<0.5]
-
-def Ca40_prof(f):
-
-    import numpy
-
-    return numpy.array(f['Ca40'])[numpy.array(f['ghost'])<0.5]
-
-def Ti44_prof(f):
-
-    import numpy
-
-    return numpy.array(f['Ti44'])[numpy.array(f['ghost'])<0.5]
-
-def Cr48_prof(f):
-
-    import numpy
-
-    return numpy.array(f['Cr48'])[numpy.array(f['ghost'])<0.5]
-
-def Fe52_prof(f):
-
-    import numpy
-
-    return numpy.array(f['Fe52'])[numpy.array(f['ghost'])<0.5]
-
-def Ni56_prof(f):
-
-    import numpy
-
-    return numpy.array(f['Ni56'])[numpy.array(f['ghost'])<0.5]
+    return numpy.array(f['y_velocity'])
 
 def main():
 
@@ -170,8 +101,8 @@ def main():
     #            'log10_temperature',
     #            'log10_temperature_0.png')
 
-    plot_all(log10_density_cgs, 'log10_density')
-    plot_all(log10_temperature, 'log10_pressure')
+    plot_all(log10_density, 'log10_density')
+    plot_all(log10_pressure, 'log10_pressure')
     plot_all(x_velocity, 'x_velocity')
     plot_all(y_velocity, 'y_velocity')
     #plot_all(He4_prof, 'He4')
